@@ -5,11 +5,14 @@
   "dependencies": {
     "@craco/craco": "^5.6.2",
     "dayjs": "^1.8.17",
+    "graphql": "^14.5.8",
+    "miragejs": "^0.1.31",
     "prettier": "^1.19.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-scripts": "3.2.0",
-    "tailwindcss": "^1.1.4"
+    "tailwindcss": "^1.1.4",
+    "urql": "^1.6.3"
   },
   "scripts": {
     "start": "craco start",

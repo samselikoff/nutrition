@@ -1,19 +1,30 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React from "react";
 import dayjs from "dayjs";
+import { useQuery } from "urql";
+
+const getMeals = `
+  query {
+    meals {
+      id
+      item
+      good
+      date
+    }
+  }
+`;
 
 export default function() {
-  let meals = [
-    { id: 1, item: "toast with peanut butter", good: true, date: "2019-11-17" },
-    { id: 2, item: "bacon egg wrap", good: true, date: "2019-11-17" },
-    { id: 3, item: "pad thai", good: false, date: "2019-11-17" },
-    { id: 4, item: "drinks", good: false, date: "2019-11-17" },
-    { id: 5, item: "chicken steak eggs", good: true, date: "2019-11-16" },
-    { id: 6, item: "soup, bread", good: true, date: "2019-11-16" },
-    { id: 7, item: "drinks", good: false, date: "2019-11-16" },
-    { id: 8, item: "chicken pasta", good: true, date: "2019-11-16" },
-    { id: 9, item: "baklava", good: false, date: "2019-11-16" }
-  ];
+  const [res] = useQuery({
+    query: getMeals
+  });
+
+  if (res.error) {
+    console.error(res.error);
+    return "Oh no!";
+  }
+
+  let meals = (res.data && res.data.meals) || [];
   let goodMeals = meals.filter(meal => meal.good);
   let badMeals = meals.filter(meal => !meal.good);
   let compliance = Math.floor((goodMeals.length / meals.length) * 100);
@@ -26,30 +37,36 @@ export default function() {
       </header>
       <main>
         <div className="mt-8 text-center">
-          <p className="text-sm">Past 7 days</p>
-          <div className="mt-3 flex items-center justify-center">
-            <span
-              className={`text-2xl w-16 ${isDoingGood ? "invisible" : ""}`}
-              role="img"
-              aria-label="rating"
-            >
-              👎
-            </span>
-            <span className="text-5xl font-light">{compliance}%</span>{" "}
-            <span
-              className={`text-2xl w-16 ${isDoingGood ? "" : "invisible"}`}
-              role="img"
-              aria-label="rating"
-            >
-              👍
-            </span>
-          </div>
+          {res.fetching ? (
+            <p className="text-xl text-gray-700">Loading...</p>
+          ) : (
+            <>
+              <p className="text-sm">Past 7 days</p>
+              <div className="mt-3 flex items-center justify-center">
+                <span
+                  className={`text-2xl w-16 ${isDoingGood ? "invisible" : ""}`}
+                  role="img"
+                  aria-label="rating"
+                >
+                  👎
+                </span>
+                <span className="text-5xl font-light">{compliance}%</span>{" "}
+                <span
+                  className={`text-2xl w-16 ${isDoingGood ? "" : "invisible"}`}
+                  role="img"
+                  aria-label="rating"
+                >
+                  👍
+                </span>
+              </div>
 
-          <div className="mt-12 flex text-lg">
-            <div className="w-1/3">❌ {badMeals.length}</div>
-            <div className="w-1/3">🍽 {meals.length}</div>
-            <div className="w-1/3">✅ {goodMeals.length}</div>
-          </div>
+              <div className="mt-12 flex text-lg">
+                <div className="w-1/3">❌ {badMeals.length}</div>
+                <div className="w-1/3">🍽 {meals.length}</div>
+                <div className="w-1/3">✅ {goodMeals.length}</div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="px-4 pt-8">
@@ -75,7 +92,7 @@ function MealList({ meals }) {
             {dayjs(date).format("MMM D (dddd)")}
           </h2>
 
-          <ul className="pt-2 pl-8 list-disc">
+          <ul className="pt-2 pl-4">
             {groupedMeals[date].map(meal => (
               <li className="mt-2" key={meal.id}>
                 {meal.good ? "✅" : "❌"} {meal.item}
