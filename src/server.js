@@ -12,7 +12,26 @@ let graphqlSchema = buildSchema(`
     good: Boolean!
     date: String!
   }
-`);
+
+  type meals_insert_input {
+    id: Int
+    item: String
+    good: Boolean
+    date: String
+  }
+  
+  `);
+// type meals_mutation_response {
+//   affected_rows: Int!
+//   returning: [Meal!]!
+// }
+
+// type Mutation {
+//   insert_meals(objects: [meals_insert_input!]!): meals_mutation_response
+// }
+// type Mutation {
+//   insert_meals(objects: [meals_insert_input!]!): Meal!
+// }
 
 export function makeServer({ environment = "development" } = {}) {
   let server = new Server({
@@ -72,6 +91,8 @@ export function makeServer({ environment = "development" } = {}) {
     },
 
     routes() {
+      this.urlPrefix = "https://nutrition-backend.herokuapp.com/v1";
+
       this.post("/graphql", (schema, request) => {
         let requestJson = JSON.parse(request.requestBody);
         let query = requestJson.query;

@@ -4,7 +4,9 @@
   "private": true,
   "dependencies": {
     "@craco/craco": "^5.6.2",
+    "@reach/dialog": "^0.6.2",
     "dayjs": "^1.8.17",
+    "formik": "^2.0.6",
     "graphql": "^14.5.8",
     "miragejs": "^0.1.31",
     "prettier": "^1.19.1",

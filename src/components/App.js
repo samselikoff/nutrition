@@ -2,10 +2,11 @@
 import React from "react";
 import dayjs from "dayjs";
 import { useQuery } from "urql";
+import { MealForm } from "./MealForm";
 
 const getMeals = `
   query {
-    meals {
+    meals(order_by: {id: desc}) {
       id
       item
       good
@@ -15,6 +16,9 @@ const getMeals = `
 `;
 
 export default function() {
+  let [editingMeal, setEditingMeal] = React.useState(null);
+  let [isShowingForm, setIsShowingForm] = React.useState(false);
+
   const [res] = useQuery({
     query: getMeals
   });
@@ -32,8 +36,15 @@ export default function() {
 
   return (
     <div className="text-gray-900 antialiased leading-none">
-      <header className="px-2 py-3 text-sm uppercase bg-blue-500 text-white font-bold text-center">
+      <header className="px-2 py-3 text-sm uppercase bg-blue-500 text-white font-bold flex justify-between items-center">
+        <span className="w-4"></span>
         <span>Nutrition</span>
+        <button
+          className="w-4 text-lg font-semibold"
+          onClick={() => setIsShowingForm(true)}
+        >
+          +
+        </button>
       </header>
       <main>
         <div className="mt-8 text-center">
@@ -70,14 +81,28 @@ export default function() {
         </div>
 
         <div className="px-4 pt-8">
-          <MealList meals={meals} />
+          <MealList meals={meals} onClick={setEditingMeal} />
         </div>
       </main>
+
+      {isShowingForm && (
+        <MealForm
+          onCancel={() => setIsShowingForm(false)}
+          didSave={() => setIsShowingForm(null)}
+        />
+      )}
+      {editingMeal && (
+        <MealForm
+          meal={editingMeal}
+          onCancel={() => setEditingMeal(null)}
+          didSave={() => setEditingMeal(null)}
+        />
+      )}
     </div>
   );
 }
 
-function MealList({ meals }) {
+function MealList({ meals, onClick }) {
   let groupedMeals = meals.reduce((memo, meal) => {
     memo[meal.date] = memo[meal.date] || [];
     memo[meal.date].push(meal);
@@ -86,21 +111,25 @@ function MealList({ meals }) {
 
   return (
     <>
-      {Object.keys(groupedMeals).map(date => (
-        <div className="mt-10" key={date}>
-          <h2 className="text-lg font-bold">
-            {dayjs(date).format("MMM D (dddd)")}
-          </h2>
+      {Object.keys(groupedMeals)
+        .sort((a, b) => (a > b ? -1 : 1))
+        .map(date => (
+          <div className="mt-10" key={date}>
+            <h2 className="text-lg font-bold">
+              {dayjs(date).format("MMM D (dddd)")}
+            </h2>
 
-          <ul className="pt-2 pl-4">
-            {groupedMeals[date].map(meal => (
-              <li className="mt-2" key={meal.id}>
-                {meal.good ? "✅" : "❌"} {meal.item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+            <ul className="pt-2 pl-4">
+              {groupedMeals[date].map(meal => (
+                <li className="mt-2" key={meal.id}>
+                  <button onClick={() => onClick(meal)}>
+                    {meal.good ? "✅" : "❌"} {meal.item}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
     </>
   );
 }
