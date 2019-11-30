@@ -3,6 +3,7 @@ import React from "react";
 import dayjs from "dayjs";
 import { useQuery } from "urql";
 import { MealForm } from "./MealForm";
+import { Field } from "formik";
 
 const getMeals = `
   query {
@@ -39,6 +40,7 @@ export default function() {
       <header className="px-2 py-3 text-sm uppercase bg-blue-500 text-white font-bold flex justify-between items-center">
         <span className="w-4"></span>
         <span>Nutrition</span>
+        <Field />
         <button
           className="w-4 text-lg font-semibold"
           onClick={() => setIsShowingForm(true)}
