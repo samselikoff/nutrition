@@ -141,7 +141,7 @@ function MealList({ meals, onClick }) {
             <ul className="pt-2 pl-4">
               {groupedMeals[date].map(meal => (
                 <li className="mt-2" key={meal.id}>
-                  <button onClick={() => onClick(meal)}>
+                  <button className="text-left" onClick={() => onClick(meal)}>
                     {meal.good ? "✅" : "❌"} {meal.item}
                   </button>
                 </li>
