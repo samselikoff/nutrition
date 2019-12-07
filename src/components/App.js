@@ -5,12 +5,22 @@ import { useQuery } from "urql";
 import { MealForm } from "./MealForm";
 
 const getMeals = `
-  query {
-    meals(order_by: {id: desc}) {
+  query GetHomepageData($startDate: date!) {
+    allMeals: meals(order_by: {id: desc}) {
       id
       item
       good
       date
+    }
+    goodMeals: meals_aggregate(where: {date: {_gte: $startDate}, good: {_eq: true}}) {
+      aggregate {
+        count(columns: good)
+      }
+    }
+    badMeals: meals_aggregate(where: {date: {_gte: $startDate}, good: {_eq: false}}) {
+      aggregate {
+        count(columns: good)
+      }
     }
   }
 `;
@@ -20,23 +30,32 @@ export default function() {
   let [isShowingForm, setIsShowingForm] = React.useState(false);
 
   const [res] = useQuery({
-    query: getMeals
+    query: getMeals,
+    variables: {
+      startDate: dayjs()
+        .subtract(6, "day")
+        .format("YYYY-MM-DD")
+    }
   });
 
   if (res.error) {
     console.error(res.error);
-    return "Oh no!";
+    return <p>{res.error.message}</p>;
   }
 
-  let meals = (res.data && res.data.meals) || [];
-  let goodMeals = meals.filter(meal => meal.good);
-  let badMeals = meals.filter(meal => !meal.good);
-  let compliance = Math.floor((goodMeals.length / meals.length) * 100);
-  let isDoingGood = compliance > 75;
+  if (res.fetching) {
+    return <p>Loading...</p>;
+  }
+
+  let goodMealsThisWeek = res.data.goodMeals.aggregate.count;
+  let badMealsThisWeek = res.data.badMeals.aggregate.count;
+  let totalMealsThisWeek = goodMealsThisWeek + badMealsThisWeek;
+  let compliance = Math.floor((goodMealsThisWeek / totalMealsThisWeek) * 100);
+  let isDoingGood = compliance > 80;
 
   return (
-    <div className="text-gray-900 antialiased leading-none">
-      <header className="px-2 py-3 text-sm uppercase bg-blue-500 text-white font-bold flex justify-between items-center">
+    <div className="antialiased leading-none text-gray-900">
+      <header className="flex items-center justify-between px-2 py-3 text-sm font-bold text-white uppercase bg-blue-500">
         <span className="w-4"></span>
         <span>Nutrition</span>
         <button
@@ -53,7 +72,7 @@ export default function() {
           ) : (
             <>
               <p className="text-sm">Past 7 days</p>
-              <div className="mt-3 flex items-center justify-center">
+              <div className="flex items-center justify-center mt-3">
                 <span
                   className={`text-2xl w-16 ${isDoingGood ? "invisible" : ""}`}
                   role="img"
@@ -71,17 +90,17 @@ export default function() {
                 </span>
               </div>
 
-              <div className="mt-12 flex text-lg">
-                <div className="w-1/3">❌ {badMeals.length}</div>
-                <div className="w-1/3">🍽 {meals.length}</div>
-                <div className="w-1/3">✅ {goodMeals.length}</div>
+              <div className="flex mt-12 text-lg">
+                <div className="w-1/3">❌ {badMealsThisWeek}</div>
+                <div className="w-1/3">🍽 {totalMealsThisWeek}</div>
+                <div className="w-1/3">✅ {goodMealsThisWeek}</div>
               </div>
             </>
           )}
         </div>
 
         <div className="px-4 pt-8">
-          <MealList meals={meals} onClick={setEditingMeal} />
+          <MealList meals={res.data.allMeals} onClick={setEditingMeal} />
         </div>
       </main>
 
